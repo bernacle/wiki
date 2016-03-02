@@ -4,7 +4,12 @@ class ArticlesController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show]
 
   def index
-    @articles = Article.all.order('created_at DESC')
+    if params[:category].blank?
+      @articles = Article.all.order('created_at DESC')
+    else
+      @category_id = Category.find_by(name: params[:category]).id
+      @articles = Article.where(category_id: @category_id).order("created_at DESC")
+    end
   end
 
   def show
@@ -29,11 +34,16 @@ class ArticlesController < ApplicationController
   end
 
   def update
-
+    if @article.update(article_params)
+      redirect_to @article
+    else
+      render 'edit'
+    end
   end
 
   def destroy
-
+    @article.destroy
+    redirect_to root_path
   end
 
   private
@@ -42,6 +52,6 @@ class ArticlesController < ApplicationController
     end
 
     def article_params
-      params.require(:article).permit(:title, :content)
+      params.require(:article).permit(:title, :content, :category_id)
     end
 end
